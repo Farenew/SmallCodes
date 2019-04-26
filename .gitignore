@@ -1,0 +1,5 @@
+addressCompress/*
+
+!addressCompress/*.cpp
+
+!addressCompress/*.txt
