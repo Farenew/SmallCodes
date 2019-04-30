@@ -3,3 +3,9 @@ addressCompress/*
 !addressCompress/*.cpp
 
 !addressCompress/*.txt
+
+traceTiny/*
+
+!traceTiny/*.cpp
+
+!traceTiny/*.txt

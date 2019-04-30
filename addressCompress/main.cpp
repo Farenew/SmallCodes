@@ -31,8 +31,8 @@ typedef struct traceLine{
     char* hash;
 }traceLine;
 
-const char* dir = "/home/astl/hyx/task2/";
-const char* fileName = "mails_1.blkparse";
+const char* dir = "/home/astl/hyx/task5/";
+const char* fileName = "mails_1_400W.blkparse";
 const char* writeFile = "mails_1_addCompress.blkparse";
 
 const int HASH_SIZE = 32;
