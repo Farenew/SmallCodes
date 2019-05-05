@@ -4,8 +4,20 @@ addressCompress/*
 
 !addressCompress/*.txt
 
+!addressCompress/*.h
+
 traceTiny/*
 
 !traceTiny/*.cpp
 
 !traceTiny/*.txt
+
+!traceTiny/*.h
+
+traceDealer/*
+
+!traceDealer/*.cpp
+
+!traceDealer/*.txt
+
+!traceDealer/*.h

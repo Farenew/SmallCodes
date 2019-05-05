@@ -26,8 +26,10 @@ namespace readAndTiny{
 }
 
 
+namespace addressCount{
 
+}
 
 int main(){
-    readAndTiny::main();
+
 }
