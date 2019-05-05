@@ -17,7 +17,7 @@ namespace trace{
     using std::vector;
 
     // what trace are we using, different trace align with different reading method
-    enum class traceType{FIU};
+    enum class traceType{FIU, BASE};
     /* * what foramt should we get after reading
      * - basic is mostly used, format as: [time][blkno][bcount][flag][md5]
      *
@@ -34,7 +34,6 @@ namespace trace{
         string md5;
         traceLineBasic(long int t, int blk, int bc, int flg, string s):
                 time{t}, blkno{blk}, bcount{bc}, flag{flg}, md5{s}{}
-
     };
 
     class traceFile{

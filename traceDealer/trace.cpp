@@ -54,21 +54,21 @@ namespace trace{
     void* traceFile::readLine_keep(traceType T, lineType L){
         void* line = nullptr;
 
-        switch(T){
-            case traceType::FIU:
-                vector<string> tokens;
-                parseLine(tokens);
-                if(tokens.empty())
-                    return nullptr;
+        vector<string> tokens;
+        parseLine(tokens);
+        if(tokens.empty())
+            return nullptr;
 
+        switch(T){
+            case traceType::FIU: {
                 long time = stol(tokens[0]);
                 int blkno = stoi(tokens[3]);
                 int flag;
-                if(tokens[5] == "R"){
+                if (tokens[5] == "R") {
                     flag = 1;
                     readLines++;
                 }
-                if(tokens[5] == "W"){
+                if (tokens[5] == "W") {
                     flag = 0;
                     writeLines++;
                 }
@@ -76,14 +76,36 @@ namespace trace{
 
                 string md5 = tokens[8];
 
-                switch(L){
+                switch (L) {
                     case lineType::BASIC:
-                        traceLineBasic* tl = new traceLineBasic(time, blkno, bcount, flag, md5);
-                        line = (void*)tl;
-                        currentLine = (void*)tl;
+                        traceLineBasic *tl = new traceLineBasic(time, blkno, bcount, flag, md5);
+                        line = (void *) tl;
+                        currentLine = (void *) tl;
                         break;
                 }
                 break;
+            }
+            case traceType::BASE: {
+                long time = stol(tokens[0]);
+                int blkno = stoi(tokens[1]);
+                int bcount = stoi(tokens[2]);
+                int flag = stoi(tokens[3]);
+                if(flag == 0)
+                    writeLines++;
+                if(flag == 1)
+                    readLines++;
+                string md5 = tokens[4];
+
+
+                switch (L) {
+                    case lineType::BASIC:
+                        traceLineBasic *tl = new traceLineBasic(time, blkno, bcount, flag, md5);
+                        line = (void *) tl;
+                        currentLine = (void *) tl;
+                        break;
+                }
+                break;
+            }
         }
 
         totalLines++;
