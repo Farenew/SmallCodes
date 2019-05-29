@@ -17,22 +17,23 @@ namespace trace{
     using std::vector;
 
     // what trace are we using, different trace align with different reading method
-    enum class traceType{FIU, BASE};
+    enum class traceType{FIU, BASE, CAFTL};
     /* * what foramt should we get after reading
      * - basic is mostly used, format as: [time][blkno][bcount][flag][md5]
-     *
+     * - FIU is trace type for FIU trace
+     * - CAFTL is trace type for CAFTL trace
      * */
     enum class lineType{BASIC};
 
     // align with lineType::BASIC
     class traceLineBasic{
     public:
-        long time;
+        long double time;
         int blkno;
         int bcount;
         int flag;
         string md5;
-        traceLineBasic(long int t, int blk, int bc, int flg, string s):
+        traceLineBasic(long double t, int blk, int bc, int flg, string s):
                 time{t}, blkno{blk}, bcount{bc}, flag{flg}, md5{s}{}
     };
 

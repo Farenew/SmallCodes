@@ -11,24 +11,38 @@ using namespace std;
 namespace traceTiny {
     int main() {
 
-        traceType T = traceType::FIU;
+        traceType T = traceType::CAFTL;
         lineType L = lineType::BASIC;
 
-        const int MAX = 4000000;
-        const string readDir = "/home/astl/hyx/FIU_home/";
-        const string readFile = "homes-110108-112108.1.blkparse";
+        const int MAX = 200000000;
+        const string readDir = "/home/astl/hyx/caftl-traces/";
+        const string readFile = "hivetpch1-ubuntu.trace";
 
-        const string writeFile = "homes_1_tiny.blkparse";
-        const string writeDir = "/home/astl/hyx/task6/";
+        const string writeFile = "hadoop1.blkparse";
+        const string writeDir = "/home/astl/hyx/catest/";
 
         traceFile file(readFile, readDir, writeFile, writeDir);
+
+        long double start = 0.0;
+        long double end = 0.0;
+
+        int tag = 0;
+
         while (true) {
             traceLineBasic *line = (traceLineBasic *) file.readLine_nokeep(T, L);
+            if(tag == 0){
+                start = line->time;
+                tag = 1;
+            }
 
-            if (file.totalLines == 4000000 || line == nullptr)
+
+            if (file.totalLines == MAX || line == nullptr)
                 break;
 
+            end = line->time;
+
             //file.printLine(line, L);
+            //exit(0);
             file.writeLine(line, L);
 
 
@@ -41,6 +55,8 @@ namespace traceTiny {
         cout << "including " << file.writeLines << " write traces" << '\n';
         cout << "including " << file.readLines << " read traces" << '\n';
         cout << "write " << file.fileWrite << " traces" << '\n';
+
+        cout << "total time for caftl is " << end - start << '\n';
     }
 }
 
@@ -54,14 +70,14 @@ namespace addressCompress {
         return line1->time < line2->time;
     }
 
-    int main() {
+    int compress_old() {
 
         traceType T = traceType::BASE;
         lineType L = lineType::BASIC;
 
         const int BCOUNT = 8;
 
-        const string readDir = "/home/astl/hyx/task6/";
+        const string readDir = "/home/astl/hyx/task0/";
         const string readFile = "homes_1_tiny.blkparse";
 
         const string writeDir = "/home/astl/hyx/task6/";
@@ -125,17 +141,18 @@ namespace addressCompress {
         cout << "now finished!\n";
     }
 
-    int homesCompress(){
+    // this version is better
+    int compress_new(){
         traceType T = traceType::BASE;
         lineType L = lineType::BASIC;
 
         const int BCOUNT = 8;
 
-        const string readDir = "/home/astl/hyx/task6/";
-        const string readFile = "homes_1_tiny.blkparse";
+        const string readDir = "/home/astl/hyx/catest/";
+        const string readFile = "hadoop1.blkparse";
 
-        const string writeDir = "/home/astl/hyx/task6/";
-        const string writeFile = "homes_1_tinyCompress.blkparse";
+        const string writeDir = readDir;
+        const string writeFile = "hadoop1_compress.blkparse";
         traceFile file(readFile, readDir, writeFile, writeDir);
 
         vector<traceLineBasic *> traces;
@@ -208,31 +225,30 @@ namespace addressDiscard {
 
         const int BCOUNT = 8;
 
-        const int MAX_BLK = 100000;
+        const int MAX_BLK = 31999360;
 
-        const string readDir = "/home/astl/hyx/task/";
-        const string readFile = "mails_1_400W_compress.blkparse";
+        const int MAX_TRACE = 4000000;
 
-        const string writeDir = "/home/astl/hyx/task/";
-        const string writeFile = "mails_1_400W_compress_discard.blkparse";
+        const string readDir = "/home/astl/hyx/task0/";
+        const string readFile = "mails_1_300W_tinyCompress.blkparse";
+
+        const string writeDir = "/home/astl/hyx/task0/";
+        const string writeFile = "mails_1_300W_tinyCompressDis.blkparse";
         traceFile file(readFile, readDir, writeFile, writeDir);
 
-        while (true) {
-            traceLineBasic *line = (traceLineBasic *) file.readLine_nokeep(T, L);
+        cout << "now iterate and discard traces" << '\n';
 
-            if (file.totalLines == 4000000 || line == nullptr)
+        while (true) {
+            traceLineBasic *line = (traceLineBasic *)file.readLine_nokeep(T, L);
+
+            if (file.totalLines == MAX_TRACE || line == nullptr)
                 break;
 
             if (line->blkno < MAX_BLK)
                 file.writeLine(line, L);
 
-
-            if (file.totalLines == 10)
-                break;
-
             if (file.totalLines % 100000 == 0)
                 cout << "now done " << file.totalLines << " traces\n";
-
         }
 
         cout << "we have read " << file.totalLines << " traces" << '\n';
@@ -243,8 +259,49 @@ namespace addressDiscard {
 
 }
 
+namespace findBiggest{
+    int main() {
+        traceType T = traceType::CAFTL;
+        lineType L = lineType::BASIC;
+
+        const string readDir = "/home/astl/hyx/caftl-traces/";
+        const string readFile = "hivetpch1-ubuntu.trace";
+
+        traceFile file(readFile, readDir);
+
+        int biggestBlk = 0;
+        while (true) {
+            traceLineBasic *line = (traceLineBasic *) file.readLine_nokeep(T, L);
+
+            string hash = line->md5;
+            if (line == nullptr)
+                break;
+
+            if(line->blkno > biggestBlk)
+                biggestBlk = line->blkno;
+
+            cout << hash.size() << "\n";
+
+            //file.printLine(line, L);
+            //file.writeLine(line, L);
+
+
+            if (file.totalLines % 100000 == 0)
+                cout << "now done " << file.totalLines << " traces\n";
+
+        }
+
+        cout << "we have read " << file.totalLines << " traces" << '\n';
+        cout << "including " << file.writeLines << " write traces" << '\n';
+        cout << "including " << file.readLines << " read traces" << '\n';
+        cout << "write " << file.fileWrite << " traces" << '\n';
+        cout << "the biggest blkno is " << biggestBlk << '\n';
+
+    }
+}
 
 int main(){
-    traceTiny::main();
-    addressCompress::homesCompress();
+//    traceTiny::main();
+//    addressCompress::compress_new();
+    findBiggest::main();
 }

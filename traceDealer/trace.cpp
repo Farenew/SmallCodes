@@ -9,6 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
+#include <iomanip>
 
 
 namespace trace{
@@ -56,12 +57,13 @@ namespace trace{
 
         vector<string> tokens;
         parseLine(tokens);
+
         if(tokens.empty())
-            return nullptr;
+            return line;
 
         switch(T){
             case traceType::FIU: {
-                long time = stol(tokens[0]);
+                long double time = stold(tokens[0]);
                 int blkno = stoi(tokens[3]);
                 int flag;
                 if (tokens[5] == "R") {
@@ -85,8 +87,31 @@ namespace trace{
                 }
                 break;
             }
+            case traceType::CAFTL: {
+                long double time = stold(tokens[0]);
+                int blkno = stoi(tokens[5]);
+                int bcount = 8;
+                int flag;
+                if (tokens[9] == "write") {
+                    flag = 1;
+                    readLines++;
+                }
+                if (tokens[9] == "read") {
+                    flag = 0;
+                    writeLines++;
+                }
+                string md5 = tokens[10];
+                switch (L) {
+                    case lineType::BASIC:
+                        traceLineBasic *tl = new traceLineBasic(time, blkno, bcount, flag, md5);
+                        line = (void *) tl;
+                        currentLine = (void *) tl;
+                        break;
+                }
+                break;
+            }
             case traceType::BASE: {
-                long time = stol(tokens[0]);
+                long double time = stold(tokens[0]);
                 int blkno = stoi(tokens[1]);
                 int bcount = stoi(tokens[2]);
                 int flag = stoi(tokens[3]);
@@ -133,7 +158,7 @@ namespace trace{
         switch(L){
             case lineType::BASIC:
                 auto traceline = (traceLineBasic*)line;
-                writeFile << traceline->time << ' ' << traceline->blkno
+                writeFile << std::setprecision(10) <<traceline->time << std::setprecision(0) <<' ' << traceline->blkno
                           << ' ' << traceline->bcount << ' ' << traceline->flag
                           << ' ' << traceline->md5 << '\n';
         }
