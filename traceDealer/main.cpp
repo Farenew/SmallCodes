@@ -1,5 +1,7 @@
 #include <iostream>
 #include <algorithm>
+#include <cassert>
+#include <string>
 
 #include "trace.h"
 
@@ -7,45 +9,42 @@ using namespace trace;
 using namespace std;
 
 
-const string iniRead = "desktop_all.trace";
-const string iniWrite = "desktop_all_tiny.blkparse";
+namespace traceDealer {
+    traceType T = traceType::CAFTL;
+    lineType L = lineType::BASIC;
 
-const string write1 = "desktop_all_compress.trace";
+    const int MAX = 200000000;
+    const string readDir = "/home/astl/hyx/caftl-traces/";
+    string readFile = "";
 
-namespace traceTiny {
+    const string writeFile = "hadoop_all.blkparse";
+    const string writeDir = "/home/astl/hyx/catest/";
+
+    int timeTag = 0;
+
     int tiny() {
-
-        traceType T = traceType::CAFTL;
-        lineType L = lineType::BASIC;
-
-        const int MAX = 200000000;
-        const string readDir = "/home/astl/hyx/catest/";
-        const string readFile = iniRead;
-
-        const string writeFile = iniWrite;
-        const string writeDir = "/home/astl/hyx/catest/";
 
         traceFile file(readFile, readDir, writeFile, writeDir);
 
         long double start = 0.0;
         long double end = 0.0;
 
-        int tag = 0;
-
         while (true) {
             traceLineBasic *line = (traceLineBasic *) file.readLine_nokeep(T, L);
-            if(tag == 0){
+            if(timeTag == 0){
                 start = line->time;
-                tag = 1;
+                timeTag = 1;
             }
 
-            if (file.totalLines == MAX || line == nullptr)
+//            if (file.totalLines == MAX || line == nullptr)
+//                break;
+
+            if(line == nullptr)
                 break;
 
             end = line->time;
 
             //file.printLine(line, L);
-            //exit(0);
             file.writeLine(line, L);
 
             if (file.totalLines % 100000 == 0)
@@ -60,9 +59,6 @@ namespace traceTiny {
 
         cout << "total time for caftl is " << end - start << '\n';
     }
-}
-
-namespace addressCompress {
 
     bool BlkSmaller(traceLineBasic *line1, traceLineBasic *line2) {
         return line1->blkno < line2->blkno;
@@ -72,18 +68,14 @@ namespace addressCompress {
         return line1->time < line2->time;
     }
 
+//    traceType T = traceType::BASE;
+//    lineType L = lineType::BASIC;
+
     // this version is better
     int compress(){
-        traceType T = traceType::BASE;
-        lineType L = lineType::BASIC;
 
         const int BCOUNT = 8;
 
-        const string readDir = "/home/astl/hyx/catest/";
-        const string readFile = iniWrite;
-
-        const string writeDir = readDir;
-        const string writeFile = write1;
         traceFile file(readFile, readDir, writeFile, writeDir);
 
         vector<traceLineBasic *> traces;
@@ -146,25 +138,68 @@ namespace addressCompress {
         cout << "now finished!\n";
     }
 
+    double lastTime = 0;
+
+    traceFile* write;
+
+    void initial_global_write(){
+        write = new traceFile(writeFile, writeDir, 'W');
+    }
+    void destruct_global_write(){
+        delete write;
+    }
+
+
+    int combine(){
+        traceFile read(readFile, readDir, 'R');
+
+        double time = 0;
+
+        while (true) {
+            traceLineBasic *line = (traceLineBasic *) read.readLine_nokeep(T, L);
+
+            if(line == nullptr){
+                lastTime = time;
+                cout << "-----now last time is " << lastTime << '\n';
+                break;
+            }
+
+            time = line->time;
+            assert(time > lastTime);
+
+            //file.printLine(line, L);
+            write->writeLine(line, L);
+
+            if (read.totalLines % 100000 == 0)
+                cout << "now done " << read.totalLines << " traces\n";
+        }
+
+        cout << "we have read " << read.totalLines << " traces" << '\n';
+        cout << "including " << read.writeLines << " write traces" << '\n';
+        cout << "including " << read.readLines << " read traces" << '\n';
+
+        cout << "write " << write->fileWrite << " traces" << '\n';
+    }
 }
 
-
 namespace addressDiscard {
+
+    traceType T = traceType::BASE;
+    lineType L = lineType::BASIC;
+
+    const int BCOUNT = 8;
+
+    const int MAX_BLK = 31999360;
+
+    const int MAX_TRACE = 4000000;
+
+    const string readDir = "/home/astl/hyx/task0/";
+    const string readFile = "mails_1_300W_tinyCompress.blkparse";
+
+    const string writeDir = "/home/astl/hyx/task0/";
+    const string writeFile = "mails_1_300W_tinyCompressDis.blkparse";
+
     int main() {
-        traceType T = traceType::BASE;
-        lineType L = lineType::BASIC;
-
-        const int BCOUNT = 8;
-
-        const int MAX_BLK = 31999360;
-
-        const int MAX_TRACE = 4000000;
-
-        const string readDir = "/home/astl/hyx/task0/";
-        const string readFile = "mails_1_300W_tinyCompress.blkparse";
-
-        const string writeDir = "/home/astl/hyx/task0/";
-        const string writeFile = "mails_1_300W_tinyCompressDis.blkparse";
         traceFile file(readFile, readDir, writeFile, writeDir);
 
         cout << "now iterate and discard traces" << '\n';
@@ -190,49 +225,16 @@ namespace addressDiscard {
 
 }
 
-namespace findBiggest{
-    int main() {
-        traceType T = traceType::CAFTL;
-        lineType L = lineType::BASIC;
 
-        const string readDir = "/home/astl/hyx/caftl-traces/";
-        const string readFile = "hivetpch1-ubuntu.trace";
+// combine a lot of hadoop files together
+int main(int argc, char* argv[]){
+    traceDealer::initial_global_write();
 
-        traceFile file(readFile, readDir);
-
-        int biggestBlk = 0;
-        while (true) {
-            traceLineBasic *line = (traceLineBasic *) file.readLine_nokeep(T, L);
-
-            string hash = line->md5;
-            if (line == nullptr)
-                break;
-
-            if(line->blkno > biggestBlk)
-                biggestBlk = line->blkno;
-
-            cout << hash.size() << "\n";
-
-            //file.printLine(line, L);
-            //file.writeLine(line, L);
-
-
-            if (file.totalLines % 100000 == 0)
-                cout << "now done " << file.totalLines << " traces\n";
-
-        }
-
-        cout << "we have read " << file.totalLines << " traces" << '\n';
-        cout << "including " << file.writeLines << " write traces" << '\n';
-        cout << "including " << file.readLines << " read traces" << '\n';
-        cout << "write " << file.fileWrite << " traces" << '\n';
-        cout << "the biggest blkno is " << biggestBlk << '\n';
-
+    for(auto i=8; i<19; i++){
+        string name = "hivetpch" + to_string(i) + "-ubuntu.trace";
+        traceDealer::readFile = name;
+        cout << "--------------------------------\n";
+        traceDealer::combine();
     }
-}
-
-
-int main(){
-    traceTiny::tiny();
-    addressCompress::compress();
+    traceDealer::destruct_global_write();
 }

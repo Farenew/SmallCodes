@@ -40,8 +40,9 @@ namespace trace{
     class traceFile{
     public:
 
-        // construct with no need to write
-        traceFile(const string &fileToRead, const string &readDir);
+
+        // construct with only read or write
+        traceFile(const string &file, const string &dir, char type);
         // construct with the file to write
         traceFile(const string &fileToRead, const string &readDir,
                   const string& fileToWrite, const string& writeDir);
@@ -77,7 +78,9 @@ namespace trace{
     private:
         std::ifstream readFile;
         std::ofstream writeFile;
-        int writeTag;
+
+        // using 2 bit as read and write, lower bit as read, upper bit as write
+        unsigned readOrwrite = 0;
 
         template <typename Out>
         void split(const string &s, char delim, Out result) const;

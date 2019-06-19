@@ -14,20 +14,36 @@
 
 namespace trace{
 
-    traceFile::traceFile(const string &fileToRead, const string &readDir):
-            totalLines{0}, readLines{0}, writeLines{0}, writeTag{0}, fileWrite{0}, currentLine{nullptr} {
+    traceFile::traceFile(const string &file, const string &dir, char type):
+            totalLines{0}, readLines{0}, writeLines{0}, fileWrite{0}, currentLine{nullptr} {
 
-        std::cout << "reading from " << readDir + fileToRead << '\n';
-        readFile.open(readDir+fileToRead, std::ios_base::in);
-        if(!readFile.is_open()) {
-            std::cout << "cannot open trace file to read" << '\n';
+        if(type == 'R' || type == 'r'){
+            std::cout << "reading from " << dir + file << '\n';
+            readFile.open(dir+file, std::ios_base::in);
+            if(!readFile.is_open()) {
+                std::cout << "cannot open trace file to read" << '\n';
+                exit(1);
+            }
+            readOrwrite |= 1u << 0u;
+        }
+        else if(type == 'W' || type == 'w'){
+            std::cout << "writing to " << dir + file << '\n';
+            writeFile.open(dir+file, std::ios_base::out);
+            if(!writeFile.is_open()) {
+                std::cout << "cannot open trace file to write" << '\n';
+                exit(1);
+            }
+            readOrwrite |= 1u << 1u;
+        }
+        else{
+            std::cout << "cannot tell what type you are doing!" << std::endl;
             exit(1);
         }
     }
 
     traceFile::traceFile(const string &fileToRead, const string &readDir,
                              const string &fileToWrite, const string &writeDir):
-            totalLines{0}, readLines{0}, writeLines{0}, writeTag{1}, fileWrite{0}, currentLine{nullptr}{
+            totalLines{0}, readLines{0}, writeLines{0}, fileWrite{0}, currentLine{nullptr}{
 
         std::cout << "reading from " << readDir + fileToRead << '\n';
         readFile.open(readDir+fileToRead, std::ios_base::in);
@@ -35,6 +51,7 @@ namespace trace{
             std::cout << "cannot open trace file to read" << '\n';
             exit(1);
         }
+        readOrwrite |= 1u << 0u;
 
         std::cout << "writing to " << writeDir + fileToWrite << '\n';
         writeFile.open(writeDir+fileToWrite, std::ios_base::out);
@@ -42,17 +59,22 @@ namespace trace{
             std::cout << "cannot open trace file to write" << '\n';
             exit(1);
         }
+        readOrwrite |= 1u << 1u;
     }
 
     traceFile::~traceFile(){
-        if(writeTag == 1){
+        if(readOrwrite & 1u << 0u){
+            readFile.close();
+        }
+        if(readOrwrite & 1u << 1u){
             writeFile.close();
         }
-        readFile.close();
-
     }
 
     void* traceFile::readLine_keep(traceType T, lineType L){
+        assert(readFile.is_open());
+        assert(readOrwrite & 1u << 0u);
+
         void* line = nullptr;
 
         vector<string> tokens;
@@ -137,8 +159,9 @@ namespace trace{
         return line;
     }
 
-
     void* traceFile::readLine_nokeep(traceType T, lineType L) {
+        assert(readFile.is_open());
+        assert(readOrwrite & 1u << 0u);
         switch(L){
             case lineType::BASIC:
                 if(currentLine != nullptr){
@@ -155,6 +178,7 @@ namespace trace{
 
     void traceFile::writeLine(void *line, lineType L) {
         assert(writeFile.is_open());
+        assert(readOrwrite & 1u << 1u);
         switch(L){
             case lineType::BASIC:
                 auto traceline = (traceLineBasic*)line;
@@ -178,7 +202,6 @@ namespace trace{
     }
 
 
-
     void traceFile::parseLine(vector<string>& tokens) {
         string line;
         getline(readFile, line);
@@ -187,8 +210,6 @@ namespace trace{
             split(line, ' ', back_inserter(tokens));
         }
     }
-
-
 
     template <typename Out>
     void traceFile::split(const string &s, char delim, Out result) const {
