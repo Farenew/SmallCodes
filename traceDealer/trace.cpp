@@ -178,6 +178,7 @@ namespace trace{
     }
 
 
+
     void traceFile::parseLine(vector<string>& tokens) {
         string line;
         getline(readFile, line);
@@ -186,6 +187,8 @@ namespace trace{
             split(line, ' ', back_inserter(tokens));
         }
     }
+
+
 
     template <typename Out>
     void traceFile::split(const string &s, char delim, Out result) const {

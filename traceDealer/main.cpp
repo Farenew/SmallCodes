@@ -7,18 +7,22 @@ using namespace trace;
 using namespace std;
 
 
+const string iniRead = "desktop_all.trace";
+const string iniWrite = "desktop_all_tiny.blkparse";
+
+const string write1 = "desktop_all_compress.trace";
 
 namespace traceTiny {
-    int main() {
+    int tiny() {
 
         traceType T = traceType::CAFTL;
         lineType L = lineType::BASIC;
 
         const int MAX = 200000000;
-        const string readDir = "/home/astl/hyx/caftl-traces/";
-        const string readFile = "hivetpch1-ubuntu.trace";
+        const string readDir = "/home/astl/hyx/catest/";
+        const string readFile = iniRead;
 
-        const string writeFile = "hadoop1.blkparse";
+        const string writeFile = iniWrite;
         const string writeDir = "/home/astl/hyx/catest/";
 
         traceFile file(readFile, readDir, writeFile, writeDir);
@@ -35,7 +39,6 @@ namespace traceTiny {
                 tag = 1;
             }
 
-
             if (file.totalLines == MAX || line == nullptr)
                 break;
 
@@ -44,7 +47,6 @@ namespace traceTiny {
             //file.printLine(line, L);
             //exit(0);
             file.writeLine(line, L);
-
 
             if (file.totalLines % 100000 == 0)
                 cout << "now done " << file.totalLines << " traces\n";
@@ -70,89 +72,18 @@ namespace addressCompress {
         return line1->time < line2->time;
     }
 
-    int compress_old() {
-
-        traceType T = traceType::BASE;
-        lineType L = lineType::BASIC;
-
-        const int BCOUNT = 8;
-
-        const string readDir = "/home/astl/hyx/task0/";
-        const string readFile = "homes_1_tiny.blkparse";
-
-        const string writeDir = "/home/astl/hyx/task6/";
-        const string writeFile = "homes_1_tinyCompress.blkparse";
-        traceFile file(readFile, readDir, writeFile, writeDir);
-
-        vector<traceLineBasic *> traces;
-
-        while (true) {
-            traceLineBasic *line = (traceLineBasic *) file.readLine_keep(T, L);
-
-            if (line == nullptr)
-                break;
-
-            if (line->bcount != 0)
-                traces.push_back(line);
-
-            if (file.totalLines % 100000 == 0)
-                cout << "now done reading " << file.totalLines << " traces\n";
-        }
-        cout << "we have read " << file.totalLines << " traces" << '\n';
-        cout << "including " << file.writeLines << " write traces" << '\n';
-        cout << "including " << file.readLines << " read traces" << '\n';
-
-        cout << "now doing sort:\n";
-        std::sort(traces.begin(), traces.end(), BlkSmaller);
-        cout << "sort finished\n";
-
-        cout << "now the biggest address is " << (*(traces.end() - 1))->blkno << '\n';
-
-
-        cout << "now compress address\n";
-        // # compress by its blkno, make the biggest slot no more than 2 * BCOUNT, make initial zero
-        traces[0]->blkno = 0;
-        for (std::vector<traceLineBasic *>::size_type i = 0; i < traces.size() - 1; i++) {
-            auto j = i + 1;
-
-            if (traces[j]->blkno - 2 * BCOUNT <= traces[i]->blkno) {
-                continue;
-            }
-
-            traces[j]->blkno = traces[i]->blkno + 2 * BCOUNT;
-        }
-        cout << "now done address compress\n";
-
-        cout << "after compress, now the biggest address is " << (*(traces.end() - 1))->blkno << '\n';
-
-        cout << "now restorting\n";
-        std::sort(traces.begin(), traces.end(), TimeSmaller);
-        cout << "now restorting finished\n";
-
-
-        cout << "now writing back:\n";
-        for (auto i:traces) {
-            file.writeLine(i, L);
-
-            if (file.fileWrite % 100000 == 0)
-                cout << "now done writing " << file.fileWrite << " traces\n";
-        }
-
-        cout << "now finished!\n";
-    }
-
     // this version is better
-    int compress_new(){
+    int compress(){
         traceType T = traceType::BASE;
         lineType L = lineType::BASIC;
 
         const int BCOUNT = 8;
 
         const string readDir = "/home/astl/hyx/catest/";
-        const string readFile = "hadoop1.blkparse";
+        const string readFile = iniWrite;
 
         const string writeDir = readDir;
-        const string writeFile = "hadoop1_compress.blkparse";
+        const string writeFile = write1;
         traceFile file(readFile, readDir, writeFile, writeDir);
 
         vector<traceLineBasic *> traces;
@@ -300,8 +231,8 @@ namespace findBiggest{
     }
 }
 
+
 int main(){
-//    traceTiny::main();
-//    addressCompress::compress_new();
-    findBiggest::main();
+    traceTiny::tiny();
+    addressCompress::compress();
 }
