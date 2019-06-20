@@ -14,11 +14,11 @@ namespace traceDealer {
     lineType L = lineType::BASIC;
 
     const int MAX = 200000000;
-    const string readDir = "/home/astl/hyx/caftl-traces/";
+    string readDir = "/home/astl/hyx/caftl-traces/";
     string readFile = "";
 
-    const string writeFile = "hadoop_all.blkparse";
-    const string writeDir = "/home/astl/hyx/catest/";
+    string writeFile = "hadoop_all.blkparse";
+    string writeDir = "/home/astl/hyx/catest/";
 
     int timeTag = 0;
 
@@ -180,61 +180,71 @@ namespace traceDealer {
 
         cout << "write " << write->fileWrite << " traces" << '\n';
     }
-}
 
-namespace addressDiscard {
+//    traceType T = traceType::BASE;
+//    lineType L = lineType::BASIC;
 
-    traceType T = traceType::BASE;
-    lineType L = lineType::BASIC;
+    const int MAX_BLK = 18388608;
 
-    const int BCOUNT = 8;
 
-    const int MAX_BLK = 31999360;
-
-    const int MAX_TRACE = 4000000;
-
-    const string readDir = "/home/astl/hyx/task0/";
-    const string readFile = "mails_1_300W_tinyCompress.blkparse";
-
-    const string writeDir = "/home/astl/hyx/task0/";
-    const string writeFile = "mails_1_300W_tinyCompressDis.blkparse";
-
-    int main() {
-        traceFile file(readFile, readDir, writeFile, writeDir);
+    int addressDiscard() {
+        traceFile write(readFile, readDir, writeFile, writeDir);
 
         cout << "now iterate and discard traces" << '\n';
 
         while (true) {
-            traceLineBasic *line = (traceLineBasic *)file.readLine_nokeep(T, L);
+            traceLineBasic *line = (traceLineBasic *)write.readLine_nokeep(T, L);
 
-            if (file.totalLines == MAX_TRACE || line == nullptr)
+            if (line == nullptr)
                 break;
 
             if (line->blkno < MAX_BLK)
-                file.writeLine(line, L);
+                write.writeLine(line, L);
 
-            if (file.totalLines % 100000 == 0)
-                cout << "now done " << file.totalLines << " traces\n";
+            if (write.totalLines % 100000 == 0)
+                cout << "now done " << write.totalLines << " traces\n";
         }
 
-        cout << "we have read " << file.totalLines << " traces" << '\n';
-        cout << "including " << file.writeLines << " write traces" << '\n';
-        cout << "including " << file.readLines << " read traces" << '\n';
-        cout << "write " << file.fileWrite << " traces" << '\n';
+        cout << "we have read " << write.totalLines << " traces" << '\n';
+        cout << "including " << write.writeLines << " write traces" << '\n';
+        cout << "including " << write.readLines << " read traces" << '\n';
+        cout << "write " << write.fileWrite << " traces" << '\n';
     }
+}
+
+
+int main(){
+    traceDealer::T = traceType::BASE;
+    traceDealer::readDir = "/home/astl/hyx/catest/";
+    traceDealer::readFile = "hadoop_all_compress.blkparse";
+
+    traceDealer::writeFile = "hadoop_all_200.blkparse";
+
+    traceDealer::addressDiscard();
 
 }
 
 
-// combine a lot of hadoop files together
-int main(int argc, char* argv[]){
-    traceDealer::initial_global_write();
+//// combine a lot of hadoop files together
+//int main(int argc, char* argv[]){
+//    traceDealer::initial_global_write();
+//
+//    for(auto i=8; i<19; i++){
+//        string name = "hivetpch" + to_string(i) + "-ubuntu.trace";
+//        traceDealer::readFile = name;
+//        cout << "--------------------------------\n";
+//        traceDealer::combine();
+//    }
+//    traceDealer::destruct_global_write();
+//}
 
-    for(auto i=8; i<19; i++){
-        string name = "hivetpch" + to_string(i) + "-ubuntu.trace";
-        traceDealer::readFile = name;
-        cout << "--------------------------------\n";
-        traceDealer::combine();
-    }
-    traceDealer::destruct_global_write();
-}
+//// compressed hadoop total file
+//int main(){
+//    traceDealer::T = traceType::BASE;
+//    traceDealer::readDir = "/home/astl/hyx/catest/";
+//    traceDealer::readFile = "hadoop_all.blkparse";
+//
+//    traceDealer::writeFile = "hadoop_all_compress.blkparse";
+//    traceDealer::compress();
+//}
+
