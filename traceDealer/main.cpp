@@ -13,7 +13,7 @@ namespace traceDealer {
     traceType T = traceType::CAFTL;
     lineType L = lineType::BASIC;
 
-    const int MAX = 200000000;
+//    const int MAX = 200000000;
     string readDir = "/home/astl/hyx/caftl-traces/";
     string readFile = "";
 
@@ -184,7 +184,7 @@ namespace traceDealer {
 //    traceType T = traceType::BASE;
 //    lineType L = lineType::BASIC;
 
-    const int MAX_BLK = 18388608;
+    const int MAX_BLK = 18253300;
 
 
     int addressDiscard() {
@@ -212,17 +212,66 @@ namespace traceDealer {
     }
 }
 
-
+// read initial trace file, tiny and compress it
 int main(){
-    traceDealer::T = traceType::BASE;
-    traceDealer::readDir = "/home/astl/hyx/catest/";
-    traceDealer::readFile = "hadoop_all_compress.blkparse";
+    using namespace traceDealer;
+    readFile = "trace-desktop-ubuntu-5.trace";
+    writeFile = "tp1";
 
-    traceDealer::writeFile = "hadoop_all_200.blkparse";
+    tiny();
 
-    traceDealer::addressDiscard();
+    readDir = "/home/astl/hyx/catest/";
+    readFile = "tp1";
+    writeFile = "tp1_com";
+    T = traceType::BASE;
+    compress();
 
 }
+
+//// find the blknos in ranges
+//int main(){
+//    traceDealer::T = traceType::BASE;
+//    traceDealer::readDir = "/home/astl/hyx/catest/";
+//    traceDealer::readFile = "hadoop_all_compress.blkparse";
+//
+//    traceDealer::writeFile = "hadoop_all_200.blkparse";
+//
+//    using namespace traceDealer;
+//    traceFile read(readFile, readDir, 'R');
+//
+//    const int MAX = 91266111;
+//    const int divide = 5;
+//    const int BIN = MAX / divide;
+//
+//    int lst[divide];
+//
+//    for(auto & i:lst)
+//        i = 0;
+//
+//    while(true){
+//        auto line = (traceLineBasic *)read.readLine_nokeep(T, L);
+//        if(line == nullptr)
+//            break;
+//
+//        if(line->flag == 0){
+//            if(line->blkno < BIN)
+//                lst[0] ++;
+//            else if(line->blkno < 2 * BIN)
+//                lst[1] ++;
+//            else if(line->blkno < 3 * BIN)
+//                lst[2] ++;
+//            else if(line->blkno < 4 * BIN)
+//                lst[3] ++;
+//            else
+//                lst[4] ++;
+//        }
+//
+//    }
+//
+//    for(auto i:lst)
+//        cout << i << endl;
+//
+//}
 
 
 //// combine a lot of hadoop files together
