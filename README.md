@@ -4,8 +4,12 @@ some small codes I used.
 
 ## addressCompress
 
-Used to make trace file more tiny, compress those addresses which are not used.
+地址压缩，很简单的按请求位置排序，然后按照时间排序
+
+## traceDealer
+
+处理trace，可以合并、压缩等
 
 ## traceTiny
 
-read trace and then do other things. Provide a api for trace files reading and parse.
+读trace，删除其中无用的信息
